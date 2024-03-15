@@ -3,11 +3,13 @@
 
 import argparse, importlib, logging, asyncio
 from typing import Type
+from types import FunctionType
 from viam.module.module import Module
 from viam.resource.registry import Registry, ResourceCreatorRegistration
 from viam.resource.types import Model, ModelFamily
 
 logger = logging.getLogger(__name__)
+DEFAULT_FAMILY = ModelFamily('local', 'wrapped')
 
 def register_model(model_class: Type):
     Registry.register_resource_creator(model_class.SUBTYPE, model_class.MODEL, ResourceCreatorRegistration(model_class.new))
@@ -30,21 +32,47 @@ def dynamic_new(cls, config, dependencies):
     "we patch in this 'new' function to classes that don't have one"
     return cls(config.name)
 
+def class_from_module(py_module):
+    "takes an imported python module and constructs a Model subclass from functions"
+    funcs = {
+        name: attr
+        for name in dir(py_module)
+        if isinstance((attr := getattr(py_module, name)), FunctionType)
+    }
+    model_class = type('ClasslessModule', (py_module.BaseClass,), funcs)
+    logger.debug('model_class now has %s', dir(model_class))
+    return model_class
+
+def parse_model(orig: str|Model|None):
+    if isinstance(orig, Model):
+        return orig
+    elif orig is None:
+        # todo: think about collisions here
+        return Model(DEFAULT_FAMILY, 'anonymous')
+    elif ':' in orig:
+        *family, name = model_class.MODEL.split(':')
+        return Model(ModelFamily(*family), name)
+    else:
+        return Model(DEFAULT_FAMILY, name)
+
 def main():
     "entrypoint for this wrapper"
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('socket_path', help="socket path")
     # todo: support multiple models or all models in module or something
-    p.add_argument('--model', default='mymodel.Model', help="import spec for your override implementation")
+    p.add_argument('--model', default='mymodel.Model', help="import spec for your override implementation. use trailing period for classless mode")
+    p.add_argument('--name', help="model name in classless mode. if it has ':' it's used as is, otherwise you get 'local:classless:<name>'")
     args = p.parse_args()
     
-    logging.basicConfig(level=logging.DEBUG)
-    model_class = import_class(args.model)
-    if type(model_class.MODEL) is str:
-        # note: we're testing type rather than isinstance() in case Model inherits str
-        *family, name = model_class.MODEL.split(':')
-        model_class.MODEL = Model(ModelFamily(*family), name)
-        logger.debug('parsed MODEL to %s', model_class.MODEL)
+    logging.basicConfig()
+    logger.setLevel(logging.DEBUG)
+    if args.model.endswith('.'):
+        model_class = class_from_module(importlib.import_module(args.model[:-1]))
+        model_class.MODEL = parse_model(args.name)
+    else:
+        model_class = import_class(args.model)
+        if type(model_class.MODEL) is str:
+            model_class.MODEL = parse_model(model_class.MODEL)
     if not hasattr(model_class, 'new'):
         logger.debug('patching %s with dynamic_new', model_class)
         model_class.new = dynamic_new
