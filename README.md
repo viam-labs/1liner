@@ -10,6 +10,7 @@ Example of a low-boilerplate python module.
 
 ## todo
 
+- [ ] does this work with pyinstaller? 1) can we pre-set the class(es), 2) will it detect the runtime imports
 - [ ] accept multiple models
 - [ ] if no class, use all Model subclasses from imported module
 - [ ] dynamic meta.json?

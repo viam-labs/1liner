@@ -30,6 +30,7 @@ async def module_main(model_class: Type):
 @classmethod
 def dynamic_new(cls, config, dependencies):
     "we patch in this 'new' function to classes that don't have one"
+    # todo: add dynamic_reconfigure so it's always present, call reconfigure here
     return cls(config.name)
 
 def class_from_module(py_module):
@@ -50,7 +51,7 @@ def parse_model(orig: str|Model|None):
         # todo: think about collisions here
         return Model(DEFAULT_FAMILY, 'anonymous')
     elif ':' in orig:
-        *family, name = model_class.MODEL.split(':')
+        *family, name = orig.split(':')
         return Model(ModelFamily(*family), name)
     else:
         return Model(DEFAULT_FAMILY, name)
