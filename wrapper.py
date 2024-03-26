@@ -50,11 +50,13 @@ def class_from_module(py_module):
     logger.debug('model_class now has %s', dir(model_class))
     return model_class
 
-def parse_model(orig: str|Model|None):
+def parse_model(orig: str|Model|None) -> Model:
+    "take a model, string, or None and turn it into a Model"
+    # todo: instead of doing this in wrapper, do it metaclass-style for every py module
     if isinstance(orig, Model):
         return orig
     elif orig is None:
-        # todo: think about collisions here
+        # todo: think about collisions here; maybe short random string
         return Model(DEFAULT_FAMILY, 'anonymous')
     elif ':' in orig:
         *family, name = orig.split(':')
@@ -80,6 +82,7 @@ def main():
     
     # logger.setLevel(logging.DEBUG)
     if args.model.endswith('.'):
+        # todo: potentially also support 'all module subclasses from module'
         model_class = class_from_module(importlib.import_module(args.model[:-1]))
         model_class.MODEL = parse_model(args.name)
     else:

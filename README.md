@@ -14,3 +14,9 @@ Example of a low-boilerplate python module.
 - [ ] accept multiple models
 - [ ] if no class, use all Model subclasses from imported module
 - [ ] dynamic meta.json?
+
+## design decisions
+
+- is classless mode valuable? or too confusing. it's shorter
+- how does this integrate with sdk, what is the ideal way to run it? (module entrypoints are shell strings in meta.json but binaries in local modules)
+- anything special to do with requirements.txt? imo no
