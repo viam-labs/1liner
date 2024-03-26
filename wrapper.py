@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 "run a low-boilerplate module by applying it on top of a base class"
 
-import argparse, importlib, logging, asyncio
+import argparse, importlib, asyncio
 from typing import Type
 from types import FunctionType
+import viam.logging
 from viam.module.module import Module
 from viam.resource.registry import Registry, ResourceCreatorRegistration
 from viam.resource.types import Model, ModelFamily
 
-logger = logging.getLogger(__name__)
+logger = viam.logging.getLogger(__name__)
 DEFAULT_FAMILY = ModelFamily('local', 'wrapped')
 
 def register_model(model_class: Type):
@@ -30,8 +31,13 @@ async def module_main(model_class: Type):
 @classmethod
 def dynamic_new(cls, config, dependencies):
     "we patch in this 'new' function to classes that don't have one"
-    # todo: add dynamic_reconfigure so it's always present, call reconfigure here
-    return cls(config.name)
+    self = cls(config.name)
+    logger.info('created %s %s', self, config.name)
+    self.reconfigure(config, dependencies)
+    return self
+
+def dynamic_reconfigure(self, config, dependencies):
+    logger.info('reconfigure %s', self)
 
 def class_from_module(py_module):
     "takes an imported python module and constructs a Model subclass from functions"
@@ -56,6 +62,13 @@ def parse_model(orig: str|Model|None):
     else:
         return Model(DEFAULT_FAMILY, name)
 
+def patch_attrs(cls, **attrs):
+    "set class attributes if not already present"
+    for attr, val in attrs.items():
+        if not hasattr(cls, attr):
+            logger.debug('patching %s.%s with %s', cls, attr, val)
+            setattr(cls, attr, val)
+
 def main():
     "entrypoint for this wrapper"
     p = argparse.ArgumentParser(description=__doc__)
@@ -65,8 +78,7 @@ def main():
     p.add_argument('--name', help="model name in classless mode. if it has ':' it's used as is, otherwise you get 'local:classless:<name>'")
     args = p.parse_args()
     
-    logging.basicConfig()
-    logger.setLevel(logging.DEBUG)
+    # logger.setLevel(logging.DEBUG)
     if args.model.endswith('.'):
         model_class = class_from_module(importlib.import_module(args.model[:-1]))
         model_class.MODEL = parse_model(args.name)
@@ -74,9 +86,7 @@ def main():
         model_class = import_class(args.model)
         if type(model_class.MODEL) is str:
             model_class.MODEL = parse_model(model_class.MODEL)
-    if not hasattr(model_class, 'new'):
-        logger.debug('patching %s with dynamic_new', model_class)
-        model_class.new = dynamic_new
+    patch_attrs(model_class, new=dynamic_new, reconfigure=dynamic_reconfigure)
     register_model(model_class)
     asyncio.run(module_main(model_class))
 
