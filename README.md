@@ -11,12 +11,18 @@ Example of a low-boilerplate python module.
 ## todo
 
 - [ ] does this work with pyinstaller? 1) can we pre-set the class(es), 2) will it detect the runtime imports
-- [ ] accept multiple models
-- [ ] if no class, use all Model subclasses from imported module
+- [x] accept multiple models
+- [x] if no class, use all Model subclasses from imported module
 - [ ] dynamic meta.json?
 
 ## design decisions
 
 - is classless mode valuable? or too confusing. it's shorter
 - how does this integrate with sdk, what is the ideal way to run it? (module entrypoints are shell strings in meta.json but binaries in local modules)
+- how does this work with rdk? specifically, how does shebang find virtualenv
+    - for local modules: set cwd, allow shell command (with args), do `venv/bin/python viam.module_wrapper mymodel.py (sock)`
+    - or even better: viam sdk exports executable `viam_module`, command is `venv/bin/viam_module mymodel.py (sock)`
+    - for registry modules -- is entrypoint a shell now? I think maybe yes
+    - also how will registry modules install deps? --venv param to wrapper.py?
+    - or make rdk virtualenv aware and life gets a million times easier for py modules
 - anything special to do with requirements.txt? imo no

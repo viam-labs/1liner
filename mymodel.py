@@ -1,4 +1,5 @@
-# sample_override.py -- example of how to create a low-boilerplate module
+#!/usr/bin/env -S python3 ./wrapper.py
+# mymodel.py -- example low-boilerplate module
 from viam.components.sensor import Sensor
 
 class Model(Sensor):
