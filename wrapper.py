@@ -13,7 +13,7 @@ logger = viam.logging.getLogger(__name__)
 DEFAULT_FAMILY = ModelFamily('local', 'wrapped')
 
 def register_model(model_class: Type):
-    logger.info('registering %s', model_class)
+    logger.info('registering %s %s', model_class.MODEL, model_class)
     Registry.register_resource_creator(model_class.SUBTYPE, model_class.MODEL, ResourceCreatorRegistration(model_class.new))
 
 def import_class(full_path: str) -> Type:
