@@ -11,7 +11,6 @@ from viam.resource.types import Model, ModelFamily
 
 logger = viam.logging.getLogger(__name__)
 DEFAULT_FAMILY = ModelFamily('local', 'wrapped')
-__version__ = '0.0.1'
 
 def register_model(model_class: Type):
     logger.info('registering %s %s', model_class.MODEL, model_class)

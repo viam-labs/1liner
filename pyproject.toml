@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools>=61", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,10 +9,7 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-[tools.setuptools]
-py_modules = ["viam_wrap"]
-
 [project.scripts]
 viam-wrap = "viam_wrap:main"
 
-[tools.setuptools_scm]
+[tool.setuptools_scm]
