@@ -14,4 +14,5 @@ if __name__ == '__main__':
     # build this with: 
     # pyinstaller --onefile --hidden-import viam-wrap --paths $VIRTUAL_ENV/lib/python3.10/site-packages installable.py 
     # `--paths` arg may no longer be necessary once viam-wrap is published somewhere
+    # todo: utility to append this stanza automatically at build time
     viam_wrap.main(sys.modules.get(__name__))
