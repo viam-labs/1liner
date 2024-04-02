@@ -1,6 +1,28 @@
-# 1-liner POC
+# viam-wrap
 
-Example of a low-boilerplate python module.
+This is a python package providing `viam-wrap`, a command for running low-boilerplate python modules. It takes care of everything it possible can, so you can focus on your module logic.
+
+You can install with:
+
+```sh
+pip install git+https://github.com/viam-labs/1liner
+```
+
+Check out an example at [mymodel.py](examples/mymodel.py), but it's basically:
+
+```python
+from viam.components.sensor import Sensor
+
+class Model(Sensor):
+    MODEL = "viam-labs:lowcode:sensor"
+
+    async def get_readings(self, **kwargs):
+        return {"success?": True}
+```
+
+## defaults
+
+(todo: describe `new()` and `reconfigure` defaults)
 
 ## contents
 

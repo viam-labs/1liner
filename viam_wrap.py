@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 "run a low-boilerplate module by applying it on top of a base class"
 
-import argparse, importlib, asyncio, sys, inspect, logging, os, signal
-from typing import Type, List
-from types import FunctionType
+import argparse, importlib, asyncio, sys, inspect, logging, os
+from typing import List, Iterator, Sequence
+from types import FunctionType, ModuleType
 import viam.logging
 from viam.module.module import Module
 from viam.resource.registry import Registry, ResourceCreatorRegistration
@@ -12,18 +12,18 @@ from viam.resource.types import Model, ModelFamily
 logger = viam.logging.getLogger(__name__)
 DEFAULT_FAMILY = ModelFamily('local', 'wrapped')
 
-def register_model(model_class: Type):
+def register_model(model_class: type):
     logger.info('registering %s %s', model_class.MODEL, model_class)
     Registry.register_resource_creator(model_class.SUBTYPE, model_class.MODEL, ResourceCreatorRegistration(model_class.new))
 
-def import_class(full_path: str) -> Type:
+def import_class(full_path: str) -> type:
     "takes like x.y.z.ClassName, imports x.y.z and then returns the named class"
     module_name, _, class_name = full_path.rpartition('.')
     logger.debug('importing %s from %s', class_name, module_name)
     module = importlib.import_module(module_name)
     return getattr(module, class_name)
 
-async def module_main(args, models: List[Type]):
+async def module_main(args, models: List[type]):
     "run module entrypoint with given class"
     module = Module(args.socket_path)
     for model in models:
@@ -94,47 +94,45 @@ def robust_subclass(cls: type, base: type) -> bool:
     "because issubclass doesn't work on typing.Protocol"
     return inspect.isclass(cls) and base in cls.mro()
 
-def handler(signum, frame):
-    print('signal', signum)
+def is_imported(val, mod: ModuleType) -> bool:
+    "returns True if val is not declared in the given module"
+    if val.__module__ == '__main__':
+        # note: mod.__spec__ doesn't exist when val.__module__ is __main__, I think
+        return False
+    return val.__module__ != (mod.__spec__ and mod.__spec__.name)
 
-def main():
+def pymod_to_models(mod: ModuleType, register: bool = True) -> Iterator[type]:
+    "takes a module and extracts any module classes"
+    for attr in dir(mod):
+        val = getattr(mod, attr)
+        if not robust_subclass(val, viam.resource.base.ResourceBase):
+            continue
+        if is_imported(val, mod):
+            continue
+        if type(val.MODEL) is str:
+            val.MODEL = parse_model(val.MODEL)
+        patch_attrs(val, new=dynamic_new, reconfigure=dynamic_reconfigure)
+        if register:
+            register_model(val)
+        yield val
+
+def main(*extras: Sequence[str | ModuleType]):
     "entrypoint for this wrapper"
+    # note: extras is to support programmatic invocation, i.e. pyinstaller
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('modules', nargs='*', help="0 or more .py files containing model classes")
     p.add_argument('socket_path', help="socket path")
-    # todo: support multiple models or all models in module or something
-    p.add_argument('--model', help="import spec for your override implementation, like mymodel.Model. use trailing period for classless mode")
-    p.add_argument('--name', help="model name in classless mode. if it has ':' it's used as is, otherwise you get 'local:classless:<name>'")
     p.add_argument('--debug', '-d', action='store_true', help="debug logging")
     args = p.parse_args()
 
     logger.setLevel(logging.DEBUG if args.debug else logging.INFO)
     models = []
-    if args.model is not None:
-        if args.model.endswith('.'):
-            model_class = class_from_module(importlib.import_module(args.model[:-1]))
-            model_class.MODEL = parse_model(args.name)
+    for item in args.modules + list(extras):
+        if isinstance(item, ModuleType):
+            models.extend(pymod_to_models(item))
         else:
-            model_class = import_class(args.model)
-            if type(model_class.MODEL) is str:
-                model_class.MODEL = parse_model(model_class.MODEL)
-        patch_attrs(model_class, new=dynamic_new, reconfigure=dynamic_reconfigure)
-        register_model(model_class)
-        models.append(model_class)
-    for module_path in args.modules:
-        mod = import_path(module_path)
-        for attr in dir(mod):
-            val = getattr(mod, attr)
-            if not robust_subclass(val, viam.resource.base.ResourceBase):
-                continue
-            if val.__module__ != mod.__spec__.name:
-                continue # discard things the module imports from elsewhere
-            if type(val.MODEL) is str:
-                val.MODEL = parse_model(val.MODEL)
-            patch_attrs(val, new=dynamic_new, reconfigure=dynamic_reconfigure)
-            register_model(val)
-            models.append(val)
-    signal.signal(signal.SIGTERM, handler)
+            mod = import_path(item)
+            models.extend(pymod_to_models(mod))
     asyncio.run(module_main(args, models))
 
 if __name__ == '__main__':
