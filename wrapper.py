@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 "run a low-boilerplate module by applying it on top of a base class"
 
-import argparse, importlib, asyncio, sys, inspect, logging, os
+import argparse, importlib, asyncio, sys, inspect, logging, os, signal
 from typing import Type, List
 from types import FunctionType
 import viam.logging
@@ -11,6 +11,7 @@ from viam.resource.types import Model, ModelFamily
 
 logger = viam.logging.getLogger(__name__)
 DEFAULT_FAMILY = ModelFamily('local', 'wrapped')
+__version__ = '0.0.1'
 
 def register_model(model_class: Type):
     logger.info('registering %s %s', model_class.MODEL, model_class)
@@ -94,6 +95,9 @@ def robust_subclass(cls: type, base: type) -> bool:
     "because issubclass doesn't work on typing.Protocol"
     return inspect.isclass(cls) and base in cls.mro()
 
+def handler(signum, frame):
+    print('signal', signum)
+
 def main():
     "entrypoint for this wrapper"
     p = argparse.ArgumentParser(description=__doc__)
@@ -131,6 +135,7 @@ def main():
             patch_attrs(val, new=dynamic_new, reconfigure=dynamic_reconfigure)
             register_model(val)
             models.append(val)
+    signal.signal(signal.SIGTERM, handler)
     asyncio.run(module_main(args, models))
 
 if __name__ == '__main__':

@@ -1,0 +1,12 @@
+[project]
+name = "viam-wrap"
+dynamic = ["version"]
+dependencies = [
+  "viam-sdk>=0.15.0",
+]
+
+[project.scripts]
+viam-wrap = "wrapper:main"
+
+[tools.setuptools.dynamic]
+version = {attr = "wrapper.__version__"}

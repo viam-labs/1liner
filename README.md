@@ -30,3 +30,12 @@ Example of a low-boilerplate python module.
     - could make shebang `#!venv/bin/python viam.module.wrap` but rdk would need to set up virtualenv anyway
     - generic way: one-time install command (set up venv), then path augmentation before start (prepend ./venv/bin)
 - anything special to do with requirements.txt? imo no
+
+## instructions
+
+To build:
+
+```sh
+pip install build # if you haven't
+python -m build --sdist --wheel
+```

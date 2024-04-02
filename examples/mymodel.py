@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python3 ./wrapper.py
+#!.direnv/python-3.10.12/bin/python ./wrapper.py
 # mymodel.py -- example low-boilerplate module
 from viam.components.sensor import Sensor
 
