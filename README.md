@@ -1,8 +1,8 @@
 # viam-wrap
 
-This is a python package providing `viam-wrap`, a command for running low-boilerplate python modules. It takes care of everything it possibly can, so you can focus on your module logic.
+This is a python package providing `viam-wrap`, a command for running low-boilerplate python modules. It takes over entrypoint and registration logic.
 
-You can install with:
+Install in a fresh virtualenv with:
 
 ```sh
 pip install git+https://github.com/viam-labs/1liner

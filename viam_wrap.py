@@ -12,6 +12,15 @@ from viam.resource.types import Model, ModelFamily
 logger = viam.logging.getLogger(__name__)
 DEFAULT_FAMILY = ModelFamily('local', 'wrapped')
 
+# append this to the bottom of an entrypoint to use it with pyinstaller
+BUILD_STANZA = """
+# START viam-wrap BUILD STANZA
+import sys, viam_wrap
+if __name__ == '__main__':
+    viam_wrap.main(sys.modules.get(__name__))
+# END viam-wrap BUILD STANZA
+"""
+
 def register_model(model_class: type):
     logger.info('registering %s %s', model_class.MODEL, model_class)
     Registry.register_resource_creator(model_class.SUBTYPE, model_class.MODEL, ResourceCreatorRegistration(model_class.new))
