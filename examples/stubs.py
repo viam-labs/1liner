@@ -4,17 +4,28 @@
 from viam.components.sensor import Sensor
 from viam.components.motor import Motor
 
+def create_stub_fn(name, orig, ret_value, is_async=False):
+    # careful; ret_value is mutable; probably fine given grpc?
+    if is_async:
+        async def f(self, *args, **kwargs):
+            print('fake', name)
+            return ret_value
+    else:
+        def f(self, *args, **kwargs):
+            print('fake', name)
+    f.__name__ = f'{name}_stub'
+    return f
+
 def stubme(cls):
-    import typing
+    import typing, inspect
     for attr in cls.__abstractmethods__:
         val = getattr(cls, attr)
+        is_async = inspect.iscoroutinefunction(val)
         hints = typing.get_type_hints(val)
         if (ret := hints.get('return')):
             match ret._name:
                 case 'Mapping':
-                    # todo: detect sync / async
-                    async def f(self, *args, **kwargs): print('fake', attr); return {}
-                    f.__name__ = f"{attr}_stub"
+                    f = create_stub_fn(attr, val, {}, is_async)
                     setattr(cls, attr, f)
                     print('patched', attr, 'with', f)
                     cls.__abstractmethods__ = cls.__abstractmethods__ - {attr}
@@ -22,10 +33,9 @@ def stubme(cls):
                     print('unk return type', ret._name)
     return cls
 
+@stubme
 class MySensor(Sensor):
     MODEL = "viam-labs:lowcode:sensor"
-
-MySensor = stubme(MySensor)
 
 class MyMotor(Motor):
     MODEL = "viam-labs:lowcode:motor"
