@@ -1,0 +1,11 @@
+on:
+  push:
+
+jobs:
+  lint:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-python@v5
+  - name: install
+    run: pip install ruff
+  - name: check
+    run: ruff check

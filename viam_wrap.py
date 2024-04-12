@@ -118,7 +118,7 @@ def pymod_to_models(mod: ModuleType, register: bool = True) -> Iterator[type]:
             continue
         if is_imported(val, mod):
             continue
-        if type(val.MODEL) is str:
+        if isinstance(val.MODEL, str):
             val.MODEL = parse_model(val.MODEL)
         patch_attrs(val, new=dynamic_new, reconfigure=dynamic_reconfigure)
         if register:
