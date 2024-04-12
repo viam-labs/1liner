@@ -1,5 +1,8 @@
 # viam-wrap
 
+> [!IMPORTANT]
+> This tool is experimental and not supported or recommended for external use
+
 This is a python package providing `viam-wrap`, a command for running low-boilerplate python modules. It takes over entrypoint and registration logic.
 
 Install in a fresh virtualenv with:
