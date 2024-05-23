@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # frombase.py
-import sys, argparse, asyncio
+import argparse, asyncio, logging
 from viam.components.sensor import Sensor
 from viam.resource.types import Model, ModelFamily
 from viam.resource.registry import Registry, ResourceCreatorRegistration
 from viam.module.module import Module
 
+logger = logging.getLogger(__name__)
 DEFAULT_FAMILY = ModelFamily('local', 'wrapped')
 
 def parse_model(orig: str|Model|None) -> Model:
@@ -40,7 +41,6 @@ class EasyBase:
     "mixin for easy model creation"
     def __init_subclass__(cls, register=True, **kwargs):
         super().__init_subclass__(**kwargs)
-        old = cls.MODEL
         cls.MODEL = parse_model(cls.MODEL)
         if register:
             cls.register()
