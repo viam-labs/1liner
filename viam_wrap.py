@@ -2,7 +2,7 @@
 "run a low-boilerplate module by applying it on top of a base class"
 
 import argparse, importlib, asyncio, sys, inspect, logging, os
-from typing import List, Iterator, Sequence
+from typing import List, Iterator, Sequence, Union
 from types import FunctionType, ModuleType
 import viam.logging
 from viam.module.module import Module
@@ -61,7 +61,7 @@ def class_from_module(py_module):
     logger.debug('model_class now has %s', dir(model_class))
     return model_class
 
-def parse_model(orig: str|Model|None) -> Model:
+def parse_model(orig: Union[str,Model,None]) -> Model:
     "take a model, string, or None and turn it into a Model"
     # todo: instead of doing this in wrapper, do it metaclass-style for every py module
     if isinstance(orig, Model):
