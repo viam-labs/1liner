@@ -6,7 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py_version: ["3.9", "3.10", "3.11"]
+        include:
+        - py_version: "3.9"
+          ruff_version: "py39"
+        - py_version: "3.10"
+          ruff_version: "py310"
+        - py_version: "3.11"
+          ruff_version: "py311"
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
@@ -15,4 +21,4 @@ jobs:
     - name: install
       run: pip install ruff
     - name: check
-      run: ruff check
+      run: ruff check --target-version ${{ matrix.ruff_version }}
