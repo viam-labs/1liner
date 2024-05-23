@@ -19,9 +19,10 @@ jobs:
       with:
         python-version: ${{ matrix.py_version }}
     - name: install
-      run: pip install ruff
+      run: pip install ruff pylint
     - name: check
       run: ruff check --target-version ${{ matrix.ruff_version }}
     - name: compileall
-      # sigh because ruff doesn't check type syntax
       run: python -m compileall -f *.py examples/
+    - name: pylint
+      run: pylint --errors-only viam_wrap.py

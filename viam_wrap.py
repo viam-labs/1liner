@@ -42,7 +42,7 @@ async def module_main(args, models: List[type]):
 @classmethod
 def dynamic_new(cls, config, dependencies):
     "we patch in this 'new' function to classes that don't have one"
-    self = cls(config.name)
+    self = cls(config.name) # pylint: disable=not-callable
     logger.info('created %s %s', self, config.name)
     self.reconfigure(config, dependencies)
     return self
