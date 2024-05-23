@@ -22,3 +22,6 @@ jobs:
       run: pip install ruff
     - name: check
       run: ruff check --target-version ${{ matrix.ruff_version }}
+    - name: compileall
+      # sigh because ruff doesn't check type syntax
+      run: python -m compileall -f *.py examples/
