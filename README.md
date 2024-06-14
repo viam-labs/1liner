@@ -1,7 +1,7 @@
 # viam-wrap
 
 > [!IMPORTANT]
-> This tool is experimental and not supported or recommended for external use
+> This feature has been mainlined into the Viam Python SDK. See [examples/easy_resource](https://github.com/viamrobotics/viam-python-sdk/blob/main/examples/easy_resource/main.py) for the supported version of this. This repo is deprecated and unmaintained, and will be archived soon.
 
 This is a python package providing `viam-wrap`, a command for running low-boilerplate python modules. It takes over entrypoint and registration logic.
 
